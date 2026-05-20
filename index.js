@@ -52,7 +52,19 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/facilities/:id", async (req, res) => {
+    //middleware
+
+
+    app.get("/facilities/:id", (req, res, next) => {
+
+      const header = req.headers.authorization
+      console.log(header);
+      if(header==="log"){
+              next()
+      }else{
+        res.status(401).json({message: "Unauthorized"})
+      }
+    }, async (req, res) => {
       try {
         const id = req.params.id;
 
@@ -157,23 +169,23 @@ async function run() {
       }
     });
 
-   app.get("/facilities", async (req, res) => {
-  try {
-    const email = req.query.email;
+    app.get("/facilities", async (req, res) => {
+      try {
+        const email = req.query.email;
 
-    let query = {};
+        let query = {};
 
-    if (email) {
-      query = { owner_email: email };
-    }
+        if (email) {
+          query = { owner_email: email };
+        }
 
-    const result = await facilityCollection.find(query).toArray();
+        const result = await facilityCollection.find(query).toArray();
 
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+    });
 
     app.delete("/bookings/:id", async (req, res) => {
       try {
