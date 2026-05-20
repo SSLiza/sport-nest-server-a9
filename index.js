@@ -38,10 +38,10 @@ async function run() {
     const bookingCollection = db.collection("bookings");
 
     // GET all facilities
-    app.get("/facilities", async (req, res) => {
-      const result = await facilityCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get("/facilities", async (req, res) => {
+    //   const result = await facilityCollection.find().toArray();
+    //   res.send(result);
+    // });
 
     // POST facility
     app.post("/facilities", async (req, res) => {
@@ -70,50 +70,52 @@ async function run() {
       }
     });
 
-        // UPDATE facility
-app.patch("/facilities/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
 
-    const updatedFacility = req.body;
+    // UPDATE facility
+    app.patch("/facilities/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
 
-    const query = { _id: new ObjectId(id) };
+        const updatedFacility = req.body;
 
-    const updateDoc = {
-      $set: updatedFacility,
-    };
+        const query = { _id: new ObjectId(id) };
 
-    const result = await facilityCollection.updateOne(
-      query,
-      updateDoc
-    );
+        const updateDoc = {
+          $set: updatedFacility,
+        };
 
-    res.send(result);
+        const result = await facilityCollection.updateOne(
+          query,
+          updateDoc
+        );
 
-  } catch (error) {
-    res.status(500).send({
-      message: error.message,
+        res.send(result);
+
+      } catch (error) {
+        res.status(500).send({
+          message: error.message,
+        });
+      }
     });
-  }
-});// DELETE facility
-app.delete("/facilities/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
 
-    const query = { _id: new ObjectId(id) };
+    // DELETE facility
+    app.delete("/facilities/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const email = req.query.email;
 
-    const result = await facilityCollection.deleteOne(query);
+        const query = {
+          _id: new ObjectId(id),
+          owner_email: email,
+        };
 
-    res.send(result);
+        const result = await facilityCollection.deleteOne(query);
 
-  } catch (error) {
-    res.status(500).send({
-      message: error.message,
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
     });
-  }
-});
-
-
 
 
     //bookings
@@ -131,48 +133,66 @@ app.delete("/facilities/:id", async (req, res) => {
     });
 
 
-app.get("/bookings/:email", async (req, res) => {
-  try {
+    app.get("/bookings/:email", async (req, res) => {
+      try {
 
-    const email = req.params.email;
+        const email = req.params.email;
 
-    const query = {
-      user_email: email,
-    };
+        const query = {
+          user_email: email,
+        };
 
-    const result = await bookingCollection
-      .find(query)
-      .toArray();
+        const result = await bookingCollection
+          .find(query)
+          .toArray();
 
-    res.send(result);
+        res.send(result);
 
-  } catch (error) {
+      } catch (error) {
 
-    res.status(500).send({
-      message: error.message,
+        res.status(500).send({
+          message: error.message,
+        });
+
+      }
     });
 
+   app.get("/facilities", async (req, res) => {
+  try {
+    const email = req.query.email;
+
+    let query = {};
+
+    if (email) {
+      query = { owner_email: email };
+    }
+
+    const result = await facilityCollection.find(query).toArray();
+
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
   }
 });
 
     app.delete("/bookings/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
+      try {
+        const id = req.params.id;
 
-    const query = {
-      _id: new ObjectId(id),
-    };
+        const query = {
+          _id: new ObjectId(id),
+        };
 
-    const result = await bookingCollection.deleteOne(query);
+        const result = await bookingCollection.deleteOne(query);
 
-    res.send(result);
+        res.send(result);
 
-  } catch (error) {
-    res.status(500).send({
-      message: error.message,
+      } catch (error) {
+        res.status(500).send({
+          message: error.message,
+        });
+      }
     });
-  }
-});
 
     await client.db("admin").command({ ping: 1 });
 
