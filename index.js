@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware
+//middleware
 app.use(
   cors({
     origin: `${process.env.CLIENT_URL}`,
@@ -62,7 +62,7 @@ const verifyToken = async(req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("sport-nest");
     const facilityCollection = db.collection("facilities");
@@ -76,8 +76,6 @@ async function run() {
 
       res.send(result);
     });
-
-    //middleware
 
 
     app.get("/facilities/:id", verifyToken , async (req, res) => {
@@ -245,7 +243,7 @@ app.get("/facilities", async (req, res) => {
       }
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
 
     console.log("MongoDB connected successfully");
   } finally {
