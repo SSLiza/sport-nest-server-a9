@@ -14,7 +14,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: `${process.env.CLIENT_URL}`,
     credentials: true,
   })
 );
@@ -31,7 +31,7 @@ const client = new MongoClient(uri, {
 });
 
 const JWKS = createRemoteJWKSet(
-  new URL("http://localhost:3000/api/auth/jwks")
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 )
 
 const verifyToken = async(req, res, next) => {
@@ -62,7 +62,7 @@ const verifyToken = async(req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("sport-nest");
     const facilityCollection = db.collection("facilities");
@@ -153,7 +153,7 @@ async function run() {
 
 
     //bookings
-    app.post("/bookings",verifyToken, async (req, res) => {
+    app.post("/bookings", verifyToken, async (req, res) => {
       const booking = req.body;
 
       const result = await bookingCollection.insertOne(booking);
@@ -167,7 +167,7 @@ async function run() {
     });
 
 
-    app.get("/bookings/:email", async (req, res) => {
+    app.get("/bookings/:email",verifyToken, async (req, res) => {
       try {
 
         const email = req.params.email;
@@ -209,7 +209,7 @@ async function run() {
       }
     });
 
-    app.delete("/bookings/:id", async (req, res) => {
+    app.delete("/bookings/:id",verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
 
@@ -228,7 +228,7 @@ async function run() {
       }
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
 
     console.log("MongoDB connected successfully");
   } finally {
