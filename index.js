@@ -62,7 +62,7 @@ const verifyToken = async(req, res, next) => {
 
 async function run() {
   try {
-    // await client.connect();
+    await client.connect();
 
     const db = client.db("sport-nest");
     const facilityCollection = db.collection("facilities");
@@ -185,23 +185,46 @@ async function run() {
       }
     });
 
-    app.get("/facilities", async (req, res) => {
-      try {
-        const email = req.query.email;
+app.get("/facilities", async (req, res) => {
+  try {
+    const { email, search, sport } = req.query;
 
-        let query = {};
+    let query = {};
 
-        if (email) {
-          query = { owner_email: email };
-        }
+    // Filter by owner email
+    if (email) {
+      query.owner_email = email;
+    }
 
-        const result = await facilityCollection.find(query).toArray();
+    // Search by facility name
+    if (search) {
+      query.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
 
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: error.message });
-      }
+    // Filter by sport type
+    if (sport) {
+      query.facility_type = {
+        $in: [sport],
+      };
+    }
+
+    const result = await facilityCollection
+      .find(query)
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({
+      success: false,
+      message: error.message,
     });
+  }
+});
 
     app.delete("/bookings/:id",verifyToken, async (req, res) => {
       try {
@@ -222,7 +245,7 @@ async function run() {
       }
     });
 
-    // await client.db("admin").command({ ping: 1 });
+    await client.db("admin").command({ ping: 1 });
 
     console.log("MongoDB connected successfully");
   } finally {
