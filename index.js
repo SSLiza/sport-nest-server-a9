@@ -4,6 +4,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 
 dotenv.config();
 
@@ -28,6 +29,36 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+const JWKS = createRemoteJWKSet(
+  new URL("http://localhost:3000/api/auth/jwks")
+)
+
+const verifyToken = async(req, res, next) => {
+      const authHeader = req?.headers.authorization
+      if(!authHeader){
+        return res.status(401).json({
+          message: "Unauthorized"
+        })
+      }
+      const token = authHeader.split(" ")[1]
+
+      if(!token){
+        return res.status(401).json({
+          message: "Unauthorized"
+        })
+      }
+
+      try{
+        const {payload} =await jwtVerify(token,JWKS)
+      console.log(payload)
+      }catch(error){
+        return res.status(403).json({
+          message:"forbidden"
+        })
+      }
+      next()
+    }
 
 async function run() {
   try {
@@ -55,16 +86,7 @@ async function run() {
     //middleware
 
 
-    app.get("/facilities/:id", (req, res, next) => {
-
-      const header = req.headers.authorization
-      console.log(header);
-      if(header==="log"){
-              next()
-      }else{
-        res.status(401).json({message: "Unauthorized"})
-      }
-    }, async (req, res) => {
+    app.get("/facilities/:id", verifyToken , async (req, res) => {
       try {
         const id = req.params.id;
 
@@ -131,7 +153,7 @@ async function run() {
 
 
     //bookings
-    app.post("/bookings", async (req, res) => {
+    app.post("/bookings",verifyToken, async (req, res) => {
       const booking = req.body;
 
       const result = await bookingCollection.insertOne(booking);
